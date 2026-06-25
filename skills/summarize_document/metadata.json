@@ -1,0 +1,71 @@
+{
+  "skill_id": "summarize_document",
+  "display_name": "Summarize Document",
+  "version": "0.1.0",
+  "description": "Produces a concise structured summary and key points from a document, with full PII masking and injection protection.",
+  "author": "addi katzav <katzav33@gmail.com>",
+  "created_at": "2026-06-25",
+  "status": "experimental",
+  "guide_version": "1.0.0",
+
+  "interface": {
+    "input_schema": "SummarizeDocumentInput",
+    "output_schema": "SummarizeDocumentOutput",
+    "entry_point": "skills.summarize_document:run",
+    "input_fields": [
+      { "name": "text",          "type": "str",  "required": true,  "max_length": 16000, "sanitize": true },
+      { "name": "max_sentences", "type": "int",  "required": false, "default": 5, "range": [1, 20] }
+    ],
+    "output_fields": [
+      { "name": "result",      "type": "str",        "max_length": 3000 },
+      { "name": "key_points",  "type": "list[str]",  "max_items": 10, "item_max_length": 200 },
+      { "name": "confidence",  "type": "float",      "range": [0.0, 1.0] },
+      { "name": "truncated",   "type": "bool" }
+    ]
+  },
+
+  "llm": {
+    "primary_model": "claude-sonnet-4-6",
+    "fallback_model": "claude-haiku-4-5-20251001",
+    "max_input_tokens": 2048,
+    "max_output_tokens": 1024,
+    "temperature": 0.2
+  },
+
+  "evaluation": {
+    "passing_threshold": 0.85,
+    "scoring_strategy": "keyword_overlap",
+    "fixture_count": 10,
+    "evaluator_class": "SummarizeDocumentEvaluator",
+    "ci_command": "pytest skills/summarize_document/test_skill.py -v --strict-markers"
+  },
+
+  "security": {
+    "threat_model_version": "1.0",
+    "active_threats": ["T1", "T2", "T3", "T5", "T6", "T8"],
+    "pii_fields": [],
+    "sensitive_fields": [],
+    "sanitize_fields": ["text"],
+    "processes_external_data": false,
+    "executes_code": false,
+    "injection_patterns_count": 17,
+    "pii_pattern_types": ["EMAIL", "PHONE_US", "SSN", "CREDIT_CARD", "IPV4", "AWS_KEY", "JWT", "GENERIC_SECRET"]
+  },
+
+  "dependencies": {
+    "python": ">=3.11",
+    "packages": [
+      "anthropic>=0.28.0",
+      "pydantic>=2.7.0",
+      "pydantic-settings>=2.2.1"
+    ]
+  },
+
+  "changelog": [
+    {
+      "version": "0.1.0",
+      "date": "2026-06-25",
+      "note": "Initial implementation following SKILL_CREATION_GUIDE.md v1.0.0."
+    }
+  ]
+}
